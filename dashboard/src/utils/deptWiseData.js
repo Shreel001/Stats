@@ -12,6 +12,9 @@ const deptwise = async () => {
 
     const resolvedData = await Promise.all(promises);
 
+    const nullData = resolvedData.filter(({data}) => data == null)
+    const nullDataDepts = nullData.map(element => element.name)
+
     const filteredData = resolvedData.reduce((acc, item) => {
         if (item.data !== null) {
             acc[item.name] = item.data;
@@ -21,10 +24,10 @@ const deptwise = async () => {
 
     const depts = Object.keys(filteredData)
 
-    return {depts, filteredData}
+    return {nullDataDepts, depts, filteredData}
 };
 
-deptwise()
-    .then(data => console.log(data.depts))
+// deptwise()
+//     .then(data => console.log(data.depts))
 
 module.exports = deptwise;

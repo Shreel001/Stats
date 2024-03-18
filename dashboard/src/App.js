@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import './styles.css';
-import deptwise from './utils/deptWiseData';
 
 function App() {
   const [resultData, setResultData] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [group, setGroup] = useState([]);
+  const [showMore, setShowMore] = useState(false)
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -15,7 +15,8 @@ function App() {
       try {
         const response = await fetch('http://localhost:8000');
         const data = await response.json();
-        setResultData(data);
+        const filteredData = await data.filteredData
+        setResultData(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -28,8 +29,6 @@ function App() {
       try {
         const response = await fetch('http://localhost:5000');
         const result = await response.json();
-        const data = await deptwise()
-        
         setGroup(result);
       } catch (error) {
         console.error('Error fetching group data:', error);
@@ -81,24 +80,49 @@ function App() {
           // Assuming there's only one row in the table body
           const tbody = document.getElementById('tableBody');
           tbody.innerHTML = ''; // Clear existing data
+      
           titleData.forEach(entry => {
-            const row = document.createElement('tr');
-            const titleCell = document.createElement('td');
-            const viewsCell = document.createElement('td');
-            const titleLink = document.createElement('a');
-            titleLink.textContent = entry.title;
-            titleLink.href = entry.url;
-            titleLink.style.textDecoration = 'none';
-            titleLink.style.color = 'black';
-            titleCell.appendChild(titleLink);
-            viewsCell.textContent = entry.views;
-            row.appendChild(titleCell);
-            row.appendChild(viewsCell);
-            tbody.appendChild(row);
+              const row = document.createElement('tr');
+              const titleCell = document.createElement('td');
+              const viewsCell = document.createElement('td');
+              const authorCell = document.createElement('td');
+      
+              const titleLink = document.createElement('a');
+              titleLink.textContent = entry.title;
+              titleLink.href = entry.url;
+              titleLink.style.textDecoration = 'none';
+              titleLink.style.color = 'black';
+              titleCell.appendChild(titleLink);
+      
+              // Conditional rendering for author text with "Show More" / "Show Less" button
+              const text = entry.author;
+              const string = text.toString()
+              const truncatedText = string.substring(0, 25);
+              const showMore = text.length > 25;
+      
+              authorCell.textContent = showMore ? truncatedText + '...' : text;
+              if (showMore) {
+                  const toggleButton = document.createElement('button');
+                  toggleButton.textContent = showMore ? 'Show More' : 'Show Less';
+                  toggleButton.addEventListener('click', () => {
+                      authorCell.textContent = showMore ? text : truncatedText + '...';
+                      toggleButton.textContent = showMore ? 'Show Less' : 'Show More';
+                  });
+                  authorCell.appendChild(toggleButton);
+              }
+      
+              viewsCell.textContent = entry.views;
+      
+              row.appendChild(titleCell);
+              row.appendChild(authorCell);
+              row.appendChild(viewsCell);
+      
+              tbody.appendChild(row);
           });
-        }
-
-        displayData()
+      }
+      
+      displayData();
+      
 
         const tableRows2 = [];
 
@@ -212,10 +236,11 @@ function App() {
       <canvas id="myChart"></canvas>
       <div id="topPerformingArticles">
         <h2 id="heading">Trending Articles</h2>
-        <table id="table">
+        <table id="table" class="trendingArticles">
           <thead>
             <tr>
               <th>Title</th>
+              <th>Authors</th>
               <th>Views</th>
             </tr>
           </thead>

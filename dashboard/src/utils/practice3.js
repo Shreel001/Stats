@@ -36,7 +36,7 @@ const depts = async () => {
     return filteredData
 };
 
-depts()
-    .then(data => console.log(data))
+// depts()
+//     .then(data => console.log(data))
 
 module.exports = depts;

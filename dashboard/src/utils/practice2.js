@@ -10,7 +10,8 @@ const PORT = 5000
 
 const deptwise = async () => {
     const deptID = await practice()
-    const promises = deptID.map(async element => {
+    const departments = await deptID.departments
+    const promises = departments.map(async element => {
         const faculty = element.name;
         const facultyID = element.id;
         const depts = element.departments
@@ -22,10 +23,27 @@ const deptwise = async () => {
     return resolvedData;
 };
 
+let serverCache = null;
+
 /* Proxy to handle requests */
 app.use('/', async (req, res) => {
-    const data = await deptwise()
-    res.json(data)
+    /* checking for the cached data on server side */
+    if (serverCache && Date.now() - serverCache.timestamp < 15 * 60 * 1000) {
+        res.json(serverCache.data);
+    } else {
+        try {
+            /* Fetch and cache data */
+            var data = await deptwise();
+            serverCache = {
+                data: data,
+                timestamp: Date.now(),
+            };
+            res.json(data);
+        } catch (error) {
+            console.error('Error during API request:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    }
 });
 
 app.listen(PORT, () => {
