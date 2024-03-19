@@ -103,17 +103,23 @@ body {
     width: 100%;
 }
 
-#table th:nth-child(1),
-#table td:nth-child(1) {
+#topPerformingArticles th:nth-child(1),
+#topPerformingArticles td:nth-child(1) {
     width: 60%;
 }
 
-#table th:nth-child(2),
-#table td:nth-child(2) {
-    width: 25%;
+#topPerformingArticles th:nth-child(2),
+#topPerformingArticles td:nth-child(2) {
+    width: 30%;
 }
 
-#table th:nth-child(3),
-#table td:nth-child(3) {
-    width: 15%;
+#topPerformingArticles th:nth-child(3),
+#topPerformingArticles td:nth-child(3) {
+    width: 10%;
+}
+
+.toggle-text{
+  text-decoration: italic;
+  color: #0000EE;
+  cursor: pointer;
 }

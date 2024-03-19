@@ -7,8 +7,15 @@ function App() {
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [group, setGroup] = useState([]);
-  const [showMore, setShowMore] = useState(false)
+  const [expandedAuthors, setExpandedAuthors] = useState([]);
+  const [titleData, setTitleData] = useState([])
   const chartRef = useRef(null);
+
+  const toggleAuthor = (index) => {
+    const newExpandedAuthors = [...expandedAuthors];
+    newExpandedAuthors[index] = !newExpandedAuthors[index];
+    setExpandedAuthors(newExpandedAuthors);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,7 +23,9 @@ function App() {
         const response = await fetch('http://localhost:8000');
         const data = await response.json();
         const filteredData = await data.filteredData
-        setResultData(filteredData);
+        const departments = await data.resolvedData
+        setResultData(filteredData)
+        setGroup(departments);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -24,18 +33,18 @@ function App() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const fetchGroup = async () => {
-      try {
-        const response = await fetch('http://localhost:5000');
-        const result = await response.json();
-        setGroup(result);
-      } catch (error) {
-        console.error('Error fetching group data:', error);
-      }
-    };
-    fetchGroup();
-  }, []);
+//   useEffect(() => {
+//     const fetchGroup = async () => {
+//       try {
+//         const response = await fetch('http://localhost:5000');
+//         const result = await response.json();
+//         setGroup(result);
+//       } catch (error) {
+//         console.error('Error fetching group data:', error);
+//       }
+//     };
+//     fetchGroup();
+//   }, [resultData]);
 
   useEffect(() => {
     if (resultData && (selectedDepartment || selectedFaculty) ) {
@@ -57,6 +66,7 @@ function App() {
         const topCountriesObject = data.topCountriesByViews;
         const countriesData = Object.entries(topCountriesObject);
         const titleData = data.topPerformingArticle;
+        setTitleData(titleData)
         const totalViews = data.totalViews;
         const totalDownloads = data.totalDownloads;
         const dates = data.xlabels
@@ -75,55 +85,7 @@ function App() {
             return formattedDate;
           });
         }
-
-        function displayData() {
-          // Assuming there's only one row in the table body
-          const tbody = document.getElementById('tableBody');
-          tbody.innerHTML = ''; // Clear existing data
-      
-          titleData.forEach(entry => {
-              const row = document.createElement('tr');
-              const titleCell = document.createElement('td');
-              const viewsCell = document.createElement('td');
-              const authorCell = document.createElement('td');
-      
-              const titleLink = document.createElement('a');
-              titleLink.textContent = entry.title;
-              titleLink.href = entry.url;
-              titleLink.style.textDecoration = 'none';
-              titleLink.style.color = 'black';
-              titleCell.appendChild(titleLink);
-      
-              // Conditional rendering for author text with "Show More" / "Show Less" button
-              const text = entry.author;
-              const string = text.toString()
-              const truncatedText = string.substring(0, 25);
-              const showMore = text.length > 25;
-      
-              authorCell.textContent = showMore ? truncatedText + '...' : text;
-              if (showMore) {
-                  const toggleButton = document.createElement('button');
-                  toggleButton.textContent = showMore ? 'Show More' : 'Show Less';
-                  toggleButton.addEventListener('click', () => {
-                      authorCell.textContent = showMore ? text : truncatedText + '...';
-                      toggleButton.textContent = showMore ? 'Show Less' : 'Show More';
-                  });
-                  authorCell.appendChild(toggleButton);
-              }
-      
-              viewsCell.textContent = entry.views;
-      
-              row.appendChild(titleCell);
-              row.appendChild(authorCell);
-              row.appendChild(viewsCell);
-      
-              tbody.appendChild(row);
-          });
-      }
-      
-      displayData();
-      
-
+    
         const tableRows2 = [];
 
         for (let i = 0; i < countriesData.length; i++) {
@@ -137,7 +99,8 @@ function App() {
                           <tr>
                             <th>Country</th>
                             <th>Views</th>
-                          </tr>${tableRows2.join('')}
+                          </tr>
+                          ${tableRows2.join('')}
                         </table>`;
 
         document.getElementById('topCountriesByViews').innerHTML = table2;
@@ -195,7 +158,6 @@ function App() {
           }
         });
         }
-      
     }
   }, [resultData, selectedDepartment, selectedFaculty]);
 
@@ -234,19 +196,36 @@ function App() {
       <div id="totals"></div>
       <h2 id="heading">Past 6 months overview</h2>
       <canvas id="myChart"></canvas>
-      <div id="topPerformingArticles">
-        <h2 id="heading">Trending Articles</h2>
-        <table id="table" class="trendingArticles">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Authors</th>
-              <th>Views</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
+      <h2 id="heading">Trending Articles</h2>
+      <div id='topPerformingArticles'>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Views</th>
+                </tr>
+            </thead>
+            <tbody>
+                {titleData.map((article, index) => (
+                    <tr key={index}>
+                        <td><a href={article.url} style={{ textDecoration: 'none', color: 'black' }}>{article.title}</a></td>
+                        <td>
+                            {expandedAuthors[index] || article.author.join(', ').length <= 100
+                                ? `${article.author.join(', ')}`
+                                : `${article.author.join(', ').substring(0, 100)}`}
+                            {article.author.join(', ').length > 100 && (
+                                <i><a className="toggle-text" onClick={() => toggleAuthor(index)}>
+                                    {expandedAuthors[index] ? '...Less' : '...More'}
+                                </a></i>
+                            )}
+                        </td>
+                        <td>{article.views}</td>
+                    </tr>
+                ))}
+            </tbody>
         </table>
-      </div>
+        </div>
       <h2 id="heading">Top Countries by Views</h2>
       <div id="topCountriesByViews"></div>
     </div>
