@@ -4,9 +4,10 @@ import './styles.css';
 
 function App() {
   const [resultData, setResultData] = useState(null);
+  const [group, setGroup] = useState([]);
+  const [geoJsonData, setGeoJsonData] = useState([])
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [group, setGroup] = useState([]);
   const [expandedAuthors, setExpandedAuthors] = useState([]);
   const [titleData, setTitleData] = useState([])
   const chartRef = useRef(null);
@@ -24,27 +25,16 @@ function App() {
         const data = await response.json();
         const filteredData = await data.filteredData
         const departments = await data.resolvedData
+        const geoJson = await data.coordinates
         setResultData(filteredData)
-        setGroup(departments);
+        setGroup(departments)
+        setGeoJsonData(geoJson)
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
     fetchData();
   }, []);
-
-//   useEffect(() => {
-//     const fetchGroup = async () => {
-//       try {
-//         const response = await fetch('http://localhost:5000');
-//         const result = await response.json();
-//         setGroup(result);
-//       } catch (error) {
-//         console.error('Error fetching group data:', error);
-//       }
-//     };
-//     fetchGroup();
-//   }, [resultData]);
 
   useEffect(() => {
     if (resultData && (selectedDepartment || selectedFaculty) ) {
@@ -65,6 +55,18 @@ function App() {
         const downloadsData = data.downloads;
         const topCountriesObject = data.topCountriesByViews;
         const countriesData = Object.entries(topCountriesObject);
+        const countriesObject = {};
+        for (let i = 0; i < countriesData.length; i++) {
+          const [country, value] = countriesData[i];
+          countriesObject[country] = value;
+        }
+        // Create an array of objects with views and matched feature
+        const geoData = Object.entries(countriesObject).map(([country, views]) => {
+          // Find the feature in geoJsonData that matches the country
+          const matchedFeature = geoJsonData.features.find(feature => feature.properties.name === country);
+          return { views, matchedFeature };
+        });
+        console.log(geoData)
         const titleData = data.topPerformingArticle;
         setTitleData(titleData)
         const totalViews = data.totalViews;

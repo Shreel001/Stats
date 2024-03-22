@@ -1,5 +1,6 @@
 const fetchData = require('./fetchData');
 const getGroupIDs = require('./groups');
+const fetchCoordinates = require('./getCoordinates')
 const {BEARER_AUTHORIZATION_TOKEN} = require('./env')
 
 /* Authorization header */
@@ -72,8 +73,10 @@ const deptwise = async () => {
         });
     
         const resolvedData = await Promise.all(promises);
+
+        const coordinates = await fetchCoordinates()
   
-        return {resolvedData, filteredData};
+        return {coordinates, resolvedData, filteredData};
     } catch (error) {
         console.error('Error fetching group IDs:', error);
     }
