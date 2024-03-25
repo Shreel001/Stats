@@ -1,6 +1,5 @@
 const getDate = require('./getDate')
 const { STATS_URL, CONTENT_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
-const getGroupIDs = require('./groups');
 
 /* Fetching array of last 6 months from current date */
 var xlabels = getDate();
@@ -111,12 +110,6 @@ const fetchData = async (GROUP_ID) => {
                 author: authorNames
             };
         }));
-
-        const groups = await getGroupIDs()
-
-        // const dropdown = {}
-        // const id = groups.map(element => element.id)
-        // const department = groups.map(element => element.name)
 
         var data = { views, downloads, xlabels, topCountriesByViews, totalViews, totalDownloads, topPerformingArticle};
     

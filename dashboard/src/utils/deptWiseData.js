@@ -1,6 +1,6 @@
 const fetchData = require('./fetchData');
 const getGroupIDs = require('./groups');
-const fetchCoordinates = require('./getCoordinates')
+
 const {BEARER_AUTHORIZATION_TOKEN} = require('./env')
 
 /* Authorization header */
@@ -38,7 +38,11 @@ const deptwise = async () => {
         }
         
         const json_response = await response.json();
-  
+        
+        const university = json_response
+            .filter(article => article.parent_id == 0 && article.id == 35349) // Exclude specific parent IDs
+            .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
+        
         const faculty = json_response
             .filter(element => element.parent_id == 35349 || element.parent_id == 0)
             .map(element => ({ name: element.name, id: element.id }));
@@ -73,10 +77,8 @@ const deptwise = async () => {
         });
     
         const resolvedData = await Promise.all(promises);
-
-        const coordinates = await fetchCoordinates()
   
-        return {coordinates, resolvedData, filteredData};
+        return {university, resolvedData, filteredData};
     } catch (error) {
         console.error('Error fetching group IDs:', error);
     }

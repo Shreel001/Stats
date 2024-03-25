@@ -78,7 +78,7 @@ body {
   }
 
   .dropdown{
-    width: 50%;
+    width: 45%;
   }
 
   #faculties, #departments{
@@ -96,7 +96,7 @@ body {
   }
 
   #departments{
-    margin-left: 25px
+    margin-left: 75px
   }
 
   #table {

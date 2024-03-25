@@ -18,11 +18,15 @@ const getGroupIDs = async () => {
         const result = json_response.map(article => ({ name: article.name, id: article.id }))
 
         const faculty = json_response
-            .filter(article => article.parent_id == 35349 || article.parent_id == 0) // Exclude specific parent IDs
+            .filter(article => article.parent_id == 35349) // Exclude specific parent IDs
             .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
 
         const department = json_response
             .filter(article => article.parent_id !== 35349 && article.parent_id !== 0) // Exclude specific parent IDs
+            .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
+
+        const university = json_response
+            .filter(article => article.parent_id == 0 && article.id == 35349) // Exclude specific parent IDs
             .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
 
         return result

@@ -5,9 +5,10 @@ import './styles.css';
 function App() {
   const [resultData, setResultData] = useState(null);
   const [group, setGroup] = useState([]);
-  const [geoJsonData, setGeoJsonData] = useState([])
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [defaultSelection, setDefaultSelection] = useState('Toronto Metropolitan University');
+  const [countriesData, setCountriesData] = useState([]);
   const [expandedAuthors, setExpandedAuthors] = useState([]);
   const [titleData, setTitleData] = useState([])
   const chartRef = useRef(null);
@@ -25,10 +26,8 @@ function App() {
         const data = await response.json();
         const filteredData = await data.filteredData
         const departments = await data.resolvedData
-        const geoJson = await data.coordinates
         setResultData(filteredData)
         setGroup(departments)
-        setGeoJsonData(geoJson)
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -37,7 +36,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (resultData && (selectedDepartment || selectedFaculty) ) {
+    if (resultData) {
       // Store data for the selected department
       if (selectedDepartment) {
         const data = resultData[selectedDepartment];
@@ -48,27 +47,23 @@ function App() {
         const data = resultData[selectedFaculty];
         dataSelection(data)
       }
+
+      if(!selectedFaculty && !selectedDepartment){
+        const data = resultData[defaultSelection]
+        dataSelection(data)
+      }
      
       function dataSelection(data){
           // Store data in variables
         const viewsData = data.views;
         const downloadsData = data.downloads;
         const topCountriesObject = data.topCountriesByViews;
-        const countriesData = Object.entries(topCountriesObject);
-        const countriesObject = {};
-        for (let i = 0; i < countriesData.length; i++) {
-          const [country, value] = countriesData[i];
-          countriesObject[country] = value;
-        }
-        // Create an array of objects with views and matched feature
-        const geoData = Object.entries(countriesObject).map(([country, views]) => {
-          // Find the feature in geoJsonData that matches the country
-          const matchedFeature = geoJsonData.features.find(feature => feature.properties.name === country);
-          return { views, matchedFeature };
-        });
-        console.log(geoData)
-        const titleData = data.topPerformingArticle;
-        setTitleData(titleData)
+        const topCountriesArray = Object.entries(topCountriesObject)
+        setCountriesData(topCountriesArray)
+        console.log(topCountriesArray)
+        const titles = data.topPerformingArticle;
+        setTitleData(titles)
+        console.log(titleData)
         const totalViews = data.totalViews;
         const totalDownloads = data.totalDownloads;
         const dates = data.xlabels
@@ -87,37 +82,18 @@ function App() {
             return formattedDate;
           });
         }
-    
-        const tableRows2 = [];
-
-        for (let i = 0; i < countriesData.length; i++) {
-            tableRows2.push(`<tr>
-                                <td>${countriesData[i][0]}</td>
-                                <td>${countriesData[i][1]}</td>
-                            </tr>`);
-          }
-        
-        const table2 = `<table>
-                          <tr>
-                            <th>Country</th>
-                            <th>Views</th>
-                          </tr>
-                          ${tableRows2.join('')}
-                        </table>`;
-
-        document.getElementById('topCountriesByViews').innerHTML = table2;
 
         const table3 = `<table>
                             <tr>
-                                <th>Totals</th>
+                                <th>Parameter</th>
                                 <th>Value</th>
                             </tr>
                             <tr>
-                                <td>Total Views</td>
+                                <td>Total Number of Views</td>
                                 <td>${totalViews}</td>
                             </tr>
                             <tr>
-                                <td>Total Downloads</td>
+                                <td>Total Number of Downloads</td>
                                 <td>${totalDownloads}</td>
                             </tr>
                         </table>`;
@@ -139,15 +115,13 @@ function App() {
               {
                 label: 'Views',
                 data: viewsData,
-                backgroundColor: 'rgba(0, 154, 68, 0.3)',
-                borderColor: 'rgba(0, 154, 68 , 1)',
+                backgroundColor: '#2E4053',
                 borderWidth: 1,
               },
               {
                 label: 'Downloads',
                 data: downloadsData,
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                borderColor: 'rgba(0, 0, 0, 1)',
+                backgroundColor: '#AEB6BF',
                 borderWidth: 1,
               },
             ],
@@ -163,9 +137,59 @@ function App() {
     }
   }, [resultData, selectedDepartment, selectedFaculty]);
 
+  useEffect(() => {
+    const loadGoogleCharts = async () => {
+      if (typeof window.google === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://www.gstatic.com/charts/loader.js';
+        script.onload = () => {
+          window.google.charts.load('current', {
+            'packages': ['geochart'],
+          });
+          window.google.charts.setOnLoadCallback(drawRegionsMap);
+        };
+        document.body.appendChild(script);
+      } else {
+        window.google.charts.load('current', {
+          'packages': ['geochart'],
+        });
+        window.google.charts.setOnLoadCallback(drawRegionsMap);
+      }
+    };
+
+    loadGoogleCharts();
+
+    return () => {
+      const elements = document.querySelectorAll('script[src="https://www.gstatic.com/charts/loader.js"]');
+      elements.forEach(el => el.remove());
+    }
+  }, [countriesData]);
+
+  const drawRegionsMap = () => {
+    const data = window.google.visualization.arrayToDataTable([
+        ['Country', 'Popularity'],
+        ...countriesData.map(([country, popularity]) => [country, popularity])
+    ]);
+
+    // Set colors in options object
+    const options = {
+        colorAxis: {
+            colors: ['#808B96', '#2C3E50']
+        },
+        backgroundColor: '#d9d9d9',
+        datalessRegionColor: '#ffffff'
+    };
+
+    const chart = new window.google.visualization.GeoChart(document.getElementById('regions_div'));
+
+    chart.draw(data, options);
+};
+
+
   const handleFacultyChange = (e) => {
     setSelectedFaculty(e.target.value);
     setSelectedDepartment('');
+    setDefaultSelection('Toronto Metropolitan University')
   };
 
   const handleDepartmentChange = (e) => {
@@ -173,64 +197,73 @@ function App() {
   };
 
   return (
-    <div className="master">
-      <div className='dropdown-menu'>
-        <div className="dropdown">
-          <select id="faculties" value={selectedFaculty} onChange={handleFacultyChange}>
-            <option value="">Select a faculty</option>
-            {group.map(({ faculty }) => (
-              <option key={faculty} value={faculty}>{faculty}</option>
-            ))}
-          </select>
-        </div>
-        {selectedFaculty && (
-          <div className="dropdown">
-            <select id="departments" value={selectedDepartment} onChange={handleDepartmentChange}>
-              <option value="">Select a department</option>
-              {group.find(({ faculty }) => faculty === selectedFaculty)?.depts.map(({ name }) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-      <h2 id="heading">Total views and downloads</h2>
-      <div id="totals"></div>
-      <h2 id="heading">Past 6 months overview</h2>
-      <canvas id="myChart"></canvas>
-      <h2 id="heading">Trending Articles</h2>
-      <div id='topPerformingArticles'>
-        <table>
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Author</th>
-                    <th>Views</th>
-                </tr>
-            </thead>
-            <tbody>
-                {titleData.map((article, index) => (
-                    <tr key={index}>
-                        <td><a href={article.url} style={{ textDecoration: 'none', color: 'black' }}>{article.title}</a></td>
-                        <td>
-                            {expandedAuthors[index] || article.author.join(', ').length <= 100
-                                ? `${article.author.join(', ')}`
-                                : `${article.author.join(', ').substring(0, 100)}`}
-                            {article.author.join(', ').length > 100 && (
-                                <i><a className="toggle-text" onClick={() => toggleAuthor(index)}>
-                                    {expandedAuthors[index] ? '...Less' : '...More'}
-                                </a></i>
-                            )}
-                        </td>
-                        <td>{article.views}</td>
-                    </tr>
+      <>
+        <head>
+          <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        </head>
+        <div className="master">
+          <div className='dropdown-menu'>
+            <div className="dropdown">
+              <select id="faculties" value={selectedFaculty} onChange={handleFacultyChange}>
+                <option value="">Select a faculty</option>
+                {group.map(({ faculty }) => (
+                  <option key={faculty} value={faculty}>{faculty}</option>
                 ))}
-            </tbody>
-        </table>
+              </select>
+            </div>
+            {selectedFaculty && (
+              <div className="dropdown">
+                <select id="departments" value={selectedDepartment} onChange={handleDepartmentChange}>
+                  <option value="">Select a department</option>
+                  {group.find(({ faculty }) => faculty === selectedFaculty)?.depts.map(({ name }) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+          <h2 id="heading">Global engagement</h2>
+          <body>
+            <div id="regions_div" style={{ width: '900px', height: '500px', marginTop: '10px' }}></div>
+          </body>
+          <h2 id="heading">Total views and downloads</h2>
+          <div id="totals"></div>
+          <h2 id="heading">Past 6 months overview</h2>
+          <canvas id="myChart"></canvas>
+          <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
+            <h2 id="heading">Trending Articles</h2>
+            <div id='topPerformingArticles'>
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {titleData.map((article, index) => (
+                  <tr key={index}>
+                    <td><a href={article.url} style={{ textDecoration: 'none', color: 'black' }}>{article.title}</a></td>
+                    <td>
+                      {expandedAuthors[index] || article.author.join(', ').length <= 100
+                        ? `${article.author.join(', ')}`
+                        : `${article.author.join(', ').substring(0, 100)}`}
+                      {article.author.join(', ').length > 100 && (
+                        <i><a className="toggle-text" onClick={() => toggleAuthor(index)}>
+                          {expandedAuthors[index] ? '...Less' : '...More'}
+                        </a></i>
+                      )}
+                    </td>
+                    <td>{article.views}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>  
+          </div>       
         </div>
-      <h2 id="heading">Top Countries by Views</h2>
-      <div id="topCountriesByViews"></div>
-    </div>
+      </>
   );
 }
 
