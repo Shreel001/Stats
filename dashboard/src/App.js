@@ -167,23 +167,28 @@ function App() {
 
   const drawRegionsMap = () => {
     const data = window.google.visualization.arrayToDataTable([
-        ['Country', 'Popularity'],
-        ...countriesData.map(([country, popularity]) => [country, popularity])
+        ['Country', 'Popularity', { role: 'tooltip', p: { html: true } }],
+        ...countriesData.map(([country, popularity]) => {
+            const logPopularity = Math.log10(popularity);
+            return [country, logPopularity, `Popularity: ${popularity}`];
+        })
     ]);
 
-    // Set colors in options object
     const options = {
         colorAxis: {
-            colors: ['#808B96', '#2C3E50']
+            colors: [ '#F9E79F', '#D4AC0D']
         },
         backgroundColor: '#d9d9d9',
-        datalessRegionColor: '#ffffff'
+        datalessRegionColor: '#ffffff',
+        tooltip: { isHtml: true },
+        legend: 'none',
+        scale: 'log'
     };
 
     const chart = new window.google.visualization.GeoChart(document.getElementById('regions_div'));
 
     chart.draw(data, options);
-};
+  };
 
 
   const handleFacultyChange = (e) => {
@@ -195,6 +200,8 @@ function App() {
   const handleDepartmentChange = (e) => {
     setSelectedDepartment(e.target.value);
   };
+
+  
 
   return (
       <>
