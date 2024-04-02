@@ -106,7 +106,7 @@ function App() {
         }
 
         // Create new Chart instance
-        const ctx = document.getElementById('myChart').getContext('2d');
+        const ctx = document.getElementById('dataChart').getContext('2d');
         chartRef.current = new Chart(ctx, {
           type: 'bar',
           data: {
@@ -176,9 +176,9 @@ function App() {
 
     const options = {
         colorAxis: {
-            colors: [ '#F9E79F', '#D4AC0D']
+            colors: [ '#AEB6BF', '#2E4053']
         },
-        backgroundColor: '#d9d9d9',
+        backgroundColor: 'skyblue',
         datalessRegionColor: '#ffffff',
         tooltip: { isHtml: true },
         legend: 'none',
@@ -229,16 +229,28 @@ function App() {
               </div>
             )}
           </div>
+          <hr />
           <h2 id="heading">Global engagement</h2>
-          <body>
-            <div id="regions_div" style={{ width: '900px', height: '500px', marginTop: '10px' }}></div>
-          </body>
+          <hr />
+          <div>
+            <div id="regions_div" style={{ width: '1250px', height: '550px', marginTop: '10px' }}></div>
+          </div>
+          <hr />
           <h2 id="heading">Total views and downloads</h2>
-          <div id="totals"></div>
+          <hr />
+          <div className='totalData'>
+            <div id="totals"></div>
+          </div>
+          <hr />
           <h2 id="heading">Past 6 months overview</h2>
-          <canvas id="myChart"></canvas>
+          <hr />
+          <div className='chart'>
+            <canvas id="dataChart"></canvas>
+          </div>
           <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
+            <hr />
             <h2 id="heading">Trending Articles</h2>
+            <hr />
             <div id='topPerformingArticles'>
             <table>
               <thead>
@@ -251,7 +263,7 @@ function App() {
               <tbody>
                 {titleData.map((article, index) => (
                   <tr key={index}>
-                    <td><a href={article.url} style={{ textDecoration: 'none', color: 'black' }}>{article.title}</a></td>
+                    <td><a href={article.url} style={{ textDecoration: 'none', color: '#007ab6' }}>{article.title}</a></td>
                     <td>
                       {expandedAuthors[index] || article.author.join(', ').length <= 100
                         ? `${article.author.join(', ')}`

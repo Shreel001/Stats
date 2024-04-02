@@ -4,7 +4,7 @@ body {
     background-color: #f4f4f4;
     color: #333;
     margin: 0 auto;
-    max-width: 980px
+    max-width: 1280px
   }
   
   .master {
@@ -22,6 +22,8 @@ body {
   }
   
   #heading {
+    display: flex;
+    justify-content: center;
     font-size: xx-large;
     font-family: 'EB Garamond';
     font-weight: 400;
@@ -62,6 +64,26 @@ body {
     width: 100%;
     max-width: 550px;
   }
+
+  .totalData{
+    display: flex;
+    justify-content: center;
+  }
+
+  .chart{
+    display: flex;
+    justify-content: center;
+  }
+
+  .dataChart canvas{
+    max-width: 1250px;
+    width: 100%;
+  }
+
+  .dataChart canvas{
+    max-width: 1250px;
+    width: 100%;
+  }
   
   #topCountriesByViews{
     width: 100%;
@@ -70,7 +92,7 @@ body {
   
   #topPerformingArticles{
     width: 100%;
-    max-width: 950px;
+    max-width: 1250px;
   }
 
   .dropdown-menu{
@@ -122,4 +144,11 @@ body {
   text-decoration: italic;
   color: #0000EE;
   cursor: pointer;
+}
+
+/* Define styles for horizontal lines */
+hr {
+  margin: 20px 0; /* Adjust margin as needed */
+  border: none;
+  border-top: 1px solid #ccc; /* Define color and style of horizontal line */
 }

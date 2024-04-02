@@ -68,7 +68,7 @@ const fetchData = async (GROUP_ID) => {
         /* Filtering country dataset to get top 10 countries with most views */
         const countryNames = Object.entries(allCountriesViews);
         const filteredByViews = countryNames.filter(([key, value]) => key !== 'Unknown'); // Filtering out the Unknown dataset
-        const topTen = filteredByViews.slice(0, 10);
+        const topTen = filteredByViews.slice(0, 25);
         const topCountriesByViews = Object.fromEntries(topTen); // Top ten countries by number of views
 
         /* Filtering Articles dataset to get top 10 performing articles with most views */
