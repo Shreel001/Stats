@@ -201,57 +201,55 @@ function App() {
     setSelectedDepartment(e.target.value);
   };
 
-  
-
   return (
-      <>
-        <head>
-          <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-        </head>
-        <div className="master">
-          <div className='dropdown-menu'>
+    <>
+      <head>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+      </head>
+      <div className="master">
+        <div className='dropdown-menu'>
+          <div className="dropdown">
+            <select id="faculties" value={selectedFaculty} onChange={handleFacultyChange}>
+              <option value="">Select a faculty</option>
+              {group.map(({ faculty }) => (
+                <option key={faculty} value={faculty}>{faculty}</option>
+              ))}
+            </select>
+          </div>
+          {selectedFaculty && (
             <div className="dropdown">
-              <select id="faculties" value={selectedFaculty} onChange={handleFacultyChange}>
-                <option value="">Select a faculty</option>
-                {group.map(({ faculty }) => (
-                  <option key={faculty} value={faculty}>{faculty}</option>
+              <select id="departments" value={selectedDepartment} onChange={handleDepartmentChange}>
+                <option value="">Select a department</option>
+                {group.find(({ faculty }) => faculty === selectedFaculty)?.depts.map(({ name }) => (
+                  <option key={name} value={name}>{name}</option>
                 ))}
               </select>
             </div>
-            {selectedFaculty && (
-              <div className="dropdown">
-                <select id="departments" value={selectedDepartment} onChange={handleDepartmentChange}>
-                  <option value="">Select a department</option>
-                  {group.find(({ faculty }) => faculty === selectedFaculty)?.depts.map(({ name }) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+          )}
+        </div>
+        <hr />
+        <h2 id="heading">Global engagement</h2>
+        <hr />
+        <div className='map-container'>
+          <div id="regions_div" className="map"></div>
+        </div>
+        <hr />
+        <h2 id="heading">Total views and downloads</h2>
+        <hr />
+        <div className='totalData'>
+          <div id="totals"></div>
+        </div>
+        <hr />
+        <h2 id="heading">Past 6 months overview</h2>
+        <hr />
+        <div className='chart'>
+          <canvas id="dataChart"></canvas>
+        </div>
+        <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
           <hr />
-          <h2 id="heading">Global engagement</h2>
+          <h2 id="heading">Trending Articles</h2>
           <hr />
-          <div>
-            <div id="regions_div" style={{ width: '1250px', height: '550px', marginTop: '10px' }}></div>
-          </div>
-          <hr />
-          <h2 id="heading">Total views and downloads</h2>
-          <hr />
-          <div className='totalData'>
-            <div id="totals"></div>
-          </div>
-          <hr />
-          <h2 id="heading">Past 6 months overview</h2>
-          <hr />
-          <div className='chart'>
-            <canvas id="dataChart"></canvas>
-          </div>
-          <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
-            <hr />
-            <h2 id="heading">Trending Articles</h2>
-            <hr />
-            <div id='topPerformingArticles'>
+          <div id='topPerformingArticles'>
             <table>
               <thead>
                 <tr>
@@ -279,10 +277,10 @@ function App() {
                 ))}
               </tbody>
             </table>
-          </div>  
-          </div>       
+          </div>
         </div>
-      </>
+      </div>
+    </>
   );
 }
 
