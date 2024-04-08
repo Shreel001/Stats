@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Chart from 'chart.js/auto';
+// import Chart from 'chart.js/auto';
 import './styles.css';
+import Plotly from 'plotly.js-dist'
 
 function App() {
   const [resultData, setResultData] = useState(null);
@@ -81,6 +82,8 @@ function App() {
           });
         }
 
+        const formattedLabels = mapToFormattedArray(labels)
+
         const table3 = `<table>
                             <tr>
                                 <th>Parameter</th>
@@ -104,33 +107,72 @@ function App() {
         }
 
         // Create new Chart instance
-        const ctx = document.getElementById('dataChart').getContext('2d');
-        chartRef.current = new Chart(ctx, {
+        // const ctx = document.getElementById('dataChart').getContext('2d');
+        var viewsTrace = {
+          x: formattedLabels,
+          y: viewsData,
+          name: 'views',
+          text: viewsData.map(String),
           type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: 'Views',
-                data: viewsData,
-                backgroundColor: '#2E4053',
-                borderWidth: 1,
-              },
-              {
-                label: 'Downloads',
-                data: downloadsData,
-                backgroundColor: '#AEB6BF',
-                borderWidth: 1,
-              },
-            ],
-          },
-          options: {
-            scales: {
-              x: { stacked: false },
-              y: { stacked: false }
-            },
+          hovertemplate: '<b><i>Views</i>: %{y}<extra></extra></b>',
+          textposition: 'auto',
+          marker: {
+            color: 'rgb(46, 64, 83)',
           }
-        });
+        };
+        
+        var downloadsTrace = {
+          x: formattedLabels,
+          y: downloadsData,
+          name: 'downloads',
+          text: downloadsData.map(String),
+          type: 'bar',
+          hovertemplate: '<b><i>Downloads</i>: %{y}<extra></extra></b>',
+          textposition: 'auto',
+          hoverinfo: 'none',
+          marker: {
+            color: 'rgb(174, 182, 191)',
+          }
+        };
+        
+        var data = [viewsTrace, downloadsTrace];
+
+        let width, height;
+        if (window.innerWidth <= 768) {
+          width = Math.min(window.innerWidth * 0.9, 500);
+          height = Math.min(window.innerHeight * 0.5, 300);
+          var layout = {
+            barmode: 'group', 
+            paper_bgcolor:'rgba(0,0,0,0)',
+            plot_bgcolor:'rgba(0,0,0,0)',
+            autosize: false,
+            width: width,
+            height: height,
+            margin: {l: 30, r: 0, t: 0, b: 50},
+            legend: { orientation: 'v', x: 0.7, y: 1.1, yanchor: 'bottom', traceorder: 'normal' },
+            xaxis: {
+              tickfont: { size: 8, bold: true }
+            },
+            yaxis: {
+              tickfont: { size: 8, bold: true }
+            }
+          };
+        } else {
+          width = Math.min(window.innerWidth * 0.8, 1200);
+          height = Math.min(window.innerHeight * 0.6, 600);
+          var layout = {
+            barmode: 'group', 
+            paper_bgcolor:'rgba(0,0,0,0)',
+            plot_bgcolor:'rgba(0,0,0,0)',
+            autosize: false,
+            width: width,
+            height: height,
+            legend: { orientation: 'v', x: 0.9, y: 1, yanchor: 'bottom', traceorder: 'normal', font: { size: 15 } }
+          };
+        }
+        
+        Plotly.newPlot('chart', data, layout, {displayModeBar: false}, {responsive: true});
+        
         }
     }
   }, [resultData, selectedDepartment, selectedFaculty]);
@@ -240,9 +282,7 @@ function App() {
         <hr />
         <h2 id="heading">Past 6 months overview</h2>
         <hr />
-        <div className='chart'>
-          <canvas id="dataChart"></canvas>
-        </div>
+        <div id='chart'></div>
         <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
           <hr />
           <h2 id="heading">Trending Articles</h2>
