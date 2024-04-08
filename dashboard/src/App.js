@@ -25,7 +25,7 @@ function App() {
         const response = await fetch('http://localhost:8000');
         const data = await response.json();
         const filteredData = await data.filteredData
-        const departments = await data.resolvedData
+        const departments = await data.deptList
         setResultData(filteredData)
         setGroup(departments)
       } catch (error) {
@@ -60,10 +60,8 @@ function App() {
         const topCountriesObject = data.topCountriesByViews;
         const topCountriesArray = Object.entries(topCountriesObject)
         setCountriesData(topCountriesArray)
-        console.log(topCountriesArray)
         const titles = data.topPerformingArticle;
         setTitleData(titles)
-        console.log(titleData)
         const totalViews = data.totalViews;
         const totalDownloads = data.totalDownloads;
         const dates = data.xlabels

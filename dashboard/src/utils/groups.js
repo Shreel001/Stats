@@ -18,18 +18,28 @@ const getGroupIDs = async () => {
         const result = json_response.map(article => ({ name: article.name, id: article.id }))
 
         const faculty = json_response
-            .filter(article => article.parent_id == 35349) // Exclude specific parent IDs
-            .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
+            .filter(article => article.parent_id == 35349)
+            .map(article => ({ name: article.name, id: article.id }));
 
-        const department = json_response
-            .filter(article => article.parent_id !== 35349 && article.parent_id !== 0) // Exclude specific parent IDs
-            .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
+        const departments = faculty.map(item => {
+            if (item.id != 35349) {
+                return {
+                    name: item.name,
+                    id: item.id,
+                    departments: json_response
+                        .filter(element => element.parent_id === item.id)
+                        .map(element => ({ name: element.name, id: element.id }))
+                };
+            } else {
+                return null;
+            }
+        }).filter(item => item !== null);
 
         const university = json_response
-            .filter(article => article.parent_id == 0 && article.id == 35349) // Exclude specific parent IDs
-            .map(article => ({ name: article.name, id: article.id })); // Extract group IDs
+            .filter(article => article.parent_id == 0 && article.id == 35349)
+            .map(article => ({ name: article.name, id: article.id }));
 
-        return result
+        return {result,departments,university}
     } catch (error) {
         console.error('Error fetching group IDs:', error);
         return null;
