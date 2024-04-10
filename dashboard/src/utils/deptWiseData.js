@@ -7,7 +7,7 @@ const deptwise = async () => {
 
     const promises = Ids.map(async element => {
         const data = await fetchData(element.id);
-        return {id: element.id, name: element.department, data };
+        return {name: element.department, data };
     });
 
     const resolvedData = await Promise.all(promises);
@@ -22,7 +22,7 @@ const deptwise = async () => {
         return acc;
     }, {});
 
-    // Remove sub-departments present in nullData from each department
+    // Remove sub-departments present in nullData from each faculty
     const filteredDepartments = await response.departments.map(dept => {
         const filteredSubDepartments = dept.departments.filter(subDept =>
             !nullDataDepts.includes(subDept.name)
@@ -32,9 +32,8 @@ const deptwise = async () => {
 
     const deptData = await filteredDepartments.map(async element => {
         const faculty = element.name;
-        const facultyID = element.id;
         const depts = element.depart
-        return { faculty, facultyID, depts };
+        return { faculty, depts };
     });
 
     const deptList = await Promise.all(deptData);

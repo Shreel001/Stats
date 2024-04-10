@@ -25,10 +25,9 @@ const getGroupIDs = async () => {
             if (item.id != 35349) {
                 return {
                     name: item.name,
-                    id: item.id,
                     departments: json_response
                         .filter(element => element.parent_id === item.id)
-                        .map(element => ({ name: element.name, id: element.id }))
+                        .map(element => ({ name: element.name }))
                 };
             } else {
                 return null;
@@ -37,7 +36,7 @@ const getGroupIDs = async () => {
 
         const university = json_response
             .filter(article => article.parent_id == 0 && article.id == 35349)
-            .map(article => ({ name: article.name, id: article.id }));
+            .map(article => ({ name: article.name }));
 
         return {result,departments,university}
     } catch (error) {

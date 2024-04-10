@@ -12,7 +12,6 @@ function App() {
   const [countriesData, setCountriesData] = useState([]);
   const [expandedAuthors, setExpandedAuthors] = useState([]);
   const [titleData, setTitleData] = useState([])
-  const chartRef = useRef(null);
 
   const toggleAuthor = (index) => {
     const newExpandedAuthors = [...expandedAuthors];
@@ -101,13 +100,7 @@ function App() {
 
         document.getElementById('totals').innerHTML = table3;
 
-        // Destroy existing Chart instance if it exists
-        if (chartRef.current) {
-          chartRef.current.destroy();
-        }
-
         // Create new Chart instance
-        // const ctx = document.getElementById('dataChart').getContext('2d');
         var viewsTrace = {
           x: formattedLabels,
           y: viewsData,
@@ -145,7 +138,6 @@ function App() {
             barmode: 'group', 
             paper_bgcolor:'rgba(0,0,0,0)',
             plot_bgcolor:'rgba(0,0,0,0)',
-            autosize: false,
             width: width,
             height: height,
             margin: {l: 30, r: 0, t: 0, b: 50},
@@ -155,10 +147,12 @@ function App() {
             },
             yaxis: {
               tickfont: { size: 8, bold: true }
-            }
+            },
+            dragmode: false,
+            selectdirection: 'h'
           };
         } else {
-          width = Math.min(window.innerWidth * 0.8, 1200);
+          width = Math.min(window.innerWidth * 0.9, 1275);
           height = Math.min(window.innerHeight * 0.6, 600);
           var layout = {
             barmode: 'group', 
@@ -167,11 +161,13 @@ function App() {
             autosize: false,
             width: width,
             height: height,
-            legend: { orientation: 'v', x: 0.9, y: 1, yanchor: 'bottom', traceorder: 'normal', font: { size: 15 } }
+            legend: { orientation: 'v', x: 0.9, y: 1.05, yanchor: 'bottom', traceorder: 'normal', font: { size: 15 } },
+            dragmode: false,
+            selectdirection: 'h'
           };
         }
         
-        Plotly.newPlot('chart', data, layout, {displayModeBar: false}, {responsive: true});
+        Plotly.newPlot('chart', data, layout, {displayModeBar: false});
         
         }
     }
@@ -216,7 +212,7 @@ function App() {
 
     const options = {
         colorAxis: {
-            colors: [ '#AEB6BF', '#2E4053']
+            colors: [ '#DADADA', '#2E4053']
         },
         backgroundColor: 'skyblue',
         datalessRegionColor: '#ffffff',
