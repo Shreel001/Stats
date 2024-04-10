@@ -50,6 +50,26 @@ const fetchData = async (GROUP_ID) => {
         /* downloads: Array of downloads data for past 6 months to display on chart */
         const views = Object.values(views_json.timeline);
         const downloads = Object.values(downloads_json.timeline);
+
+        const tempViews = [...views]; // Create a copy of views array
+        const tempDownloads = [...downloads]; // Create a copy of downloads array
+        
+        const maxLength = Math.max(tempViews.length, tempDownloads.length);
+        
+        // Pad views array with zeros if it's shorter
+        while (tempViews.length < maxLength) {
+            tempViews.push(0);
+        }
+        
+        // Pad downloads array with zeros if it's shorter
+        while (tempDownloads.length < maxLength) {
+            tempDownloads.push(0);
+        }
+        
+        let totals = [];
+        for(i=0; i < maxLength; i++){
+            totals[i] = tempViews[i] + tempDownloads[i]
+        }
     
         /* Total views and downloads data over past 6 months */
         const resultViews = await totalViews_json.timeline
@@ -75,7 +95,7 @@ const fetchData = async (GROUP_ID) => {
         const viewsByArticleID = responseTitles_json.map(async (element) => {
             const { id, title, url_public_html } = element;
     
-            const response = await fetch(`${STATS_URL}/${INSTITUTION_NAME}/total/views/article/${id}`);
+            const response = await fetch(`${STATS_URL}/${INSTITUTION_NAME}/total/article/${id}`);
             
             if (!response.ok) {
                 console.error(`Failed to fetch data for ID ${id}: ${response.statusText}`);
@@ -83,13 +103,15 @@ const fetchData = async (GROUP_ID) => {
             }
     
             const responseData = await response.json();
-            const totalViews = responseData.totals;
+            const totalViews = responseData.views;
+            const totalDownloads = responseData.downloads;
+            const totalData = totalViews + totalDownloads;
     
-            return { id: id, title, hyperlink: url_public_html, views: totalViews };
+            return { id: id, title, hyperlink: url_public_html, totalData: totalData };
         });
     
         const results = await Promise.all(viewsByArticleID);
-        results.sort((a, b) => b.views - a.views);
+        results.sort((a, b) => b.totalData - a.totalData);
         const topTenArticles = results.slice(0, 10);
     
         const topPerformingArticle = await Promise.all(topTenArticles.map(async (item) => {
@@ -104,14 +126,14 @@ const fetchData = async (GROUP_ID) => {
             
             return {
                 title: item.title,
-                views: item.views,
+                views: item.totalData,
                 url: item.hyperlink,
                 id: item.id,
                 author: authorNames
             };
         }));
 
-        var data = { views, downloads, xlabels, topCountriesByViews, totalViews, totalDownloads, topPerformingArticle};
+        var data = { views, downloads, totals, xlabels, topCountriesByViews, totalViews, totalDownloads, topPerformingArticle};
     
         return data;
     } catch (error) {

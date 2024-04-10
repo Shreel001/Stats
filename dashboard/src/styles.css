@@ -128,12 +128,13 @@ body {
 
 #topPerformingArticles th:nth-child(2),
 #topPerformingArticles td:nth-child(2) {
-    width: 30%;
+    width: 25%;
 }
 
 #topPerformingArticles th:nth-child(3),
 #topPerformingArticles td:nth-child(3) {
-    width: 10%;
+    width: 15%;
+    justify-content: center;
 }
 
 .map-container {

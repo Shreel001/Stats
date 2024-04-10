@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-// import Chart from 'chart.js/auto';
+import React, { useState, useEffect } from 'react';
 import './styles.css';
 import Plotly from 'plotly.js-dist'
 
@@ -57,6 +56,7 @@ function App() {
           // Store data in variables
         const viewsData = data.views;
         const downloadsData = data.downloads;
+        const totalsData = data.totals
         const topCountriesObject = data.topCountriesByViews;
         const topCountriesArray = Object.entries(topCountriesObject)
         setCountriesData(topCountriesArray)
@@ -110,7 +110,7 @@ function App() {
           hovertemplate: '<b><i>Views</i>: %{y}<extra></extra></b>',
           textposition: 'auto',
           marker: {
-            color: 'rgb(46, 64, 83)',
+            color: 'rgb(174, 182, 191)',
           }
         };
         
@@ -124,16 +124,30 @@ function App() {
           textposition: 'auto',
           hoverinfo: 'none',
           marker: {
-            color: 'rgb(174, 182, 191)',
+            color: '#ADD8E6',
+          }
+        };
+
+        var totalTrace = {
+          x: formattedLabels,
+          y: totalsData,
+          name: 'Total',
+          text: totalsData.map(String),
+          type: 'bar',
+          hovertemplate: '<b><i>Total</i>: %{y}<extra></extra></b>',
+          textposition: 'auto',
+          hoverinfo: 'none',
+          marker: {
+            color: 'rgb(46, 64, 83)',
           }
         };
         
-        var data = [viewsTrace, downloadsTrace];
+        var data = [viewsTrace, downloadsTrace, totalTrace];
 
         let width, height;
-        if (window.innerWidth <= 768) {
-          width = Math.min(window.innerWidth * 0.9, 500);
-          height = Math.min(window.innerHeight * 0.5, 300);
+        if (window.innerWidth < 481) {
+          width = Math.min(window.innerWidth * 0.85, 400);
+          height = Math.min(window.innerHeight * 0.3, 250);
           var layout = {
             barmode: 'group', 
             paper_bgcolor:'rgba(0,0,0,0)',
@@ -141,7 +155,7 @@ function App() {
             width: width,
             height: height,
             margin: {l: 30, r: 0, t: 0, b: 50},
-            legend: { orientation: 'v', x: 0.7, y: 1.1, yanchor: 'bottom', traceorder: 'normal' },
+            legend: { orientation: 'h', x:0.075, y: -0.1, traceorder: 'normal' },
             xaxis: {
               tickfont: { size: 8, bold: true }
             },
@@ -151,9 +165,29 @@ function App() {
             dragmode: false,
             selectdirection: 'h'
           };
-        } else {
+        } else if (window.innerWidth < 867 && window.innerWidth >= 481) {
+          width = Math.min(window.innerWidth * 0.9, 850);
+          height = Math.min(window.innerHeight * 0.5, 450);
+          var layout = {
+            barmode: 'group', 
+            paper_bgcolor:'rgba(0,0,0,0)',
+            plot_bgcolor:'rgba(0,0,0,0)',
+            width: width,
+            height: height,
+            margin: {l: 30, r: 0, t: 0, b: 50},
+            legend: { orientation: 'h', x: 0.55, y: 1.1, traceorder: 'normal', font: { size: 15 } },
+            xaxis: {
+              tickfont: { size: 12, bold: true }
+            },
+            yaxis: {
+              tickfont: { size: 12, bold: true }
+            },
+            dragmode: false,
+            selectdirection: 'h'
+          };
+        }else {
           width = Math.min(window.innerWidth * 0.9, 1275);
-          height = Math.min(window.innerHeight * 0.6, 600);
+          height = Math.min(window.innerHeight * 0.6, 700);
           var layout = {
             barmode: 'group', 
             paper_bgcolor:'rgba(0,0,0,0)',
@@ -161,14 +195,12 @@ function App() {
             autosize: false,
             width: width,
             height: height,
-            legend: { orientation: 'v', x: 0.9, y: 1.05, yanchor: 'bottom', traceorder: 'normal', font: { size: 15 } },
+            legend: { orientation: 'h', x: 0.72, y: 1.1, traceorder: 'normal', font: { size: 15 } },
             dragmode: false,
             selectdirection: 'h'
           };
-        }
-        
+        }     
         Plotly.newPlot('chart', data, layout, {displayModeBar: false});
-        
         }
     }
   }, [resultData, selectedDepartment, selectedFaculty]);
@@ -214,7 +246,7 @@ function App() {
         colorAxis: {
             colors: [ '#DADADA', '#2E4053']
         },
-        backgroundColor: 'skyblue',
+        backgroundColor: '#ADD8E6',
         datalessRegionColor: '#ffffff',
         tooltip: { isHtml: true },
         legend: 'none',
@@ -289,7 +321,7 @@ function App() {
                 <tr>
                   <th>Title</th>
                   <th>Author</th>
-                  <th>Views</th>
+                  <th>Total engagement</th>
                 </tr>
               </thead>
               <tbody>
