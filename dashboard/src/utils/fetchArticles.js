@@ -72,11 +72,8 @@ const fetchArticles = async (GROUP_ID) => {
     
         return data;
     } catch (error) {
-        console.error(error)
         return null;
     }
 }
-
-fetchArticles().then(data=>console.log(data))
 
 module.exports = fetchArticles;

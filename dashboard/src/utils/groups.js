@@ -7,8 +7,17 @@ const headers = {
     'Content-Type': 'application/json',
 };
 
+let cachedData = null;
+let lastCacheTimestamp = 0;
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000;
+
 const getGroupIDs = async () => {
     try {
+
+        if (cachedData && Date.now() - lastCacheTimestamp < CACHE_DURATION) {
+            return cachedData;
+        }
+
         const response = await fetch(`https://api.figshare.com/v2/account/institution/groups`, { headers });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -38,7 +47,13 @@ const getGroupIDs = async () => {
             .filter(article => article.parent_id == 0 && article.id == 35349)
             .map(article => ({ name: article.name }));
 
-        return {result,departments,university}
+        const data = {result,departments,university}
+
+        // Cache the fetched data
+        cachedData = data;
+        lastCacheTimestamp = Date.now();
+
+        return data;
     } catch (error) {
         console.error('Error fetching group IDs:', error);
         return null;
