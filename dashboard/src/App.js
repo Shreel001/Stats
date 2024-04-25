@@ -53,18 +53,21 @@ function App() {
       }
      
       function dataSelection(data){
+        const primaryData = data.primaryData
+        const articleData = data.articles
+
           // Store data in variables
-        const viewsData = data.views;
-        const downloadsData = data.downloads;
-        const totalsData = data.totals
-        const topCountriesObject = data.topCountriesByViews;
+        const viewsData = primaryData.views;
+        const downloadsData = primaryData.downloads;
+        const totalsData = primaryData.totals
+        const topCountriesObject = primaryData.topCountriesByViews;
         const topCountriesArray = Object.entries(topCountriesObject)
         setCountriesData(topCountriesArray)
-        const titles = data.topPerformingArticle;
-        setTitleData(titles)
-        const totalViews = data.totalViews;
-        const totalDownloads = data.totalDownloads;
-        const dates = data.xlabels
+        const titles = articleData.topPerformingArticle || [];
+        setTitleData(titles);
+        const totalViews = primaryData.totalViews;
+        const totalDownloads = primaryData.totalDownloads;
+        const dates = primaryData.xlabels
         const labels = dates.splice(6,11)
 
         function mapToFormattedArray(arr) {

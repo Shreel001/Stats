@@ -1,5 +1,5 @@
 const getDate = require('./getDate')
-const { STATS_URL, CONTENT_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
+const { STATS_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
 
 /* Fetching array of last 6 months from current date */
 var xlabels = getDate();
@@ -19,15 +19,13 @@ const fetchData = async (GROUP_ID) => {
             response_Downloads,
             response_TopCountries,
             respose_total_Views,
-            response_total_Downloads,
-            response_Titles_6
+            response_total_Downloads
         ] = await Promise.all([
             fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/month/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
             fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/month/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
             fetch(`${STATS_URL}/${INSTITUTION_NAME}/breakdown/total/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
             fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/year/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/year/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`),
+            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/year/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers })
         ]); 
 
         const views_json = await response_Views.json();
@@ -35,16 +33,6 @@ const fetchData = async (GROUP_ID) => {
         const topCountries_json = await response_TopCountries.json();
         const totalViews_json = await respose_total_Views.json();
         const totalDownloads_json = await response_total_Downloads.json();
-        var responseTitles_json = await response_Titles_6.json();
-
-        if (responseTitles_json.length < 10 ) {
-            try {
-                const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`)
-                var responseTitles_json = await response_Titles_12.json();
-            } catch (error) {
-                console.error(error)
-            }
-        }
     
         /* views: Array of views data for past 6 months to display on chart */
         /* downloads: Array of downloads data for past 6 months to display on chart */
@@ -91,49 +79,7 @@ const fetchData = async (GROUP_ID) => {
         const topTen = filteredByViews.slice(0, 25);
         const topCountriesByViews = Object.fromEntries(topTen); // Top ten countries by number of views
 
-        /* Filtering Articles dataset to get top 10 performing articles with most views */
-        const viewsByArticleID = responseTitles_json.map(async (element) => {
-            const { id, title, url_public_html } = element;
-    
-            const response = await fetch(`${STATS_URL}/${INSTITUTION_NAME}/total/article/${id}`);
-            
-            if (!response.ok) {
-                console.error(`Failed to fetch data for ID ${id}: ${response.statusText}`);
-                return { title, views: 0 };
-            }
-    
-            const responseData = await response.json();
-            const totalViews = responseData.views;
-            const totalDownloads = responseData.downloads;
-            const totalData = totalViews + totalDownloads;
-    
-            return { id: id, title, hyperlink: url_public_html, totalData: totalData };
-        });
-    
-        const results = await Promise.all(viewsByArticleID);
-        results.sort((a, b) => b.totalData - a.totalData);
-        const topTenArticles = results.slice(0, 10);
-    
-        const topPerformingArticle = await Promise.all(topTenArticles.map(async (item) => {
-            const response = await fetch(`${CONTENT_URL}/account/articles/${item.id}/authors`, {
-                headers: {
-                    'Authorization': `Bearer ${BEARER_AUTHORIZATION_TOKEN}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            const authors = await response.json();
-            const authorNames = authors.map(author => author.full_name);
-            
-            return {
-                title: item.title,
-                views: item.totalData,
-                url: item.hyperlink,
-                id: item.id,
-                author: authorNames
-            };
-        }));
-
-        var data = { views, downloads, totals, xlabels, topCountriesByViews, totalViews, totalDownloads, topPerformingArticle};
+        var data = { views, downloads, totals, xlabels, topCountriesByViews, totalViews, totalDownloads };
     
         return data;
     } catch (error) {
