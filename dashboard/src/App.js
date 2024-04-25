@@ -63,8 +63,12 @@ function App() {
         const topCountriesObject = primaryData.topCountriesByViews;
         const topCountriesArray = Object.entries(topCountriesObject)
         setCountriesData(topCountriesArray)
-        const titles = articleData.topPerformingArticle || [];
-        setTitleData(titles);
+        if(articleData.topPerformingArticle == null){
+          setTitleData([]);
+        }else{
+          const titles = articleData.topPerformingArticle
+          setTitleData(titles);
+        }
         const totalViews = primaryData.totalViews;
         const totalDownloads = primaryData.totalDownloads;
         const dates = primaryData.xlabels
@@ -314,7 +318,7 @@ function App() {
         <h2 id="heading">Past 6 months overview</h2>
         <hr />
         <div id='chart'></div>
-        <div id='trendingArticles' style={{ display: titleData.length ? 'block' : 'none' }}>
+        <div id='trendingArticles' style={{ display: titleData && titleData.length ? 'block' : 'none' }}>
           <hr />
           <h2 id="heading">Trending Articles</h2>
           <hr />
