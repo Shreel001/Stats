@@ -10,7 +10,7 @@ const deptwise = async () => {
         const primaryData = await fetchData(element.id);
         const articles = await fetchArticle(element.id)
         const data = {primaryData, articles}
-        return {name: element.department, data };
+        return {name: element.department, id: element.id, data };
     });
 
     const resolvedData = await Promise.all(promises);
@@ -22,6 +22,7 @@ const deptwise = async () => {
     const filteredData = resolvedData.reduce((acc, item) => {
         if (item.data.primaryData !== null) {
             acc[item.name] = {
+                id: item.id,
                 primaryData: item.data.primaryData,
                 articles: item.data.articles
             };

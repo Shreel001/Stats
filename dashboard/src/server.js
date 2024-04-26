@@ -12,7 +12,7 @@ let isRefreshing = false; // Flag to indicate if cache is being refreshed
 let temporaryCache = null; // Temporary cache to serve data while refreshing
 const PORT = 8000;
 
-/* Refresh cache every minute */
+/* Refresh cache every 8 hour */
 cron.schedule('* */8 * * *', async () => {
     console.log('Refreshing cache...');
     
@@ -44,6 +44,7 @@ cron.schedule('* */8 * * *', async () => {
 app.use('/', async (req, res) => {
     if (!serverCache && !temporaryCache) {
         const data = await deptwise();
+        
         serverCache = { data: data };
     }
     // If cache is being refreshed and temporary cache is available, serve data from temporary cache

@@ -14,15 +14,23 @@ const headers = {
 const fetchArticles = async (GROUP_ID) => {
 
     try {
-        const response_Titles_6 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`)
-        var responseTitles_json = await response_Titles_6.json();
+        let responseTitles_json;
 
-        if (responseTitles_json.length < 10 ) {
+        // Attempt fetching with a maximum of 3 retries
+        for (let i = 0; i < 3; i++) {
             try {
-                const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`)
-                var responseTitles_json = await response_Titles_12.json();
+                const response_Titles_6 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`);
+                responseTitles_json = await response_Titles_6.json();
+
+                if (responseTitles_json.length < 10) {
+                    const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`);
+                    responseTitles_json = await response_Titles_12.json();
+                }
+
+                break; // If successful, break out of the retry loop
             } catch (error) {
-                console.error(error)
+                console.error(`Error fetching articles (Attempt ${i + 1}):`, error);
+                if (i === 2) throw error; // Throw error after maximum retries
             }
         }
     
