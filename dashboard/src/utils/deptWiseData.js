@@ -4,7 +4,7 @@ const fetchArticle = require('./fetchArticles')
 
 const deptwise = async () => {
     const response = await getGroupIDs();
-    const Ids = response.result.map(element => ({ id: element.id, department: element.name }));
+    const Ids = await response.result.map(element => ({ id: element.id, department: element.name }));
 
     const promises = Ids.map(async element => {
         const primaryData = await fetchData(element.id);

@@ -18,23 +18,23 @@ function App() {
     setExpandedAuthors(newExpandedAuthors);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:8000');
-        const data = await response.json();
-        const filteredData = await data.filteredData
-        const departments = await data.deptList
-        setResultData(filteredData)
-        setGroup(departments)
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:8000');
+      const data = await response.json();
+      const filteredData = await data.filteredData
+      const departments = await data.deptList
+      setResultData(filteredData)
+      setGroup(departments)
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
   useEffect(() => {
+    if (!resultData){
+      fetchData()
+    }
     if (resultData) {
       // Store data for the selected department
       if (selectedDepartment) {
@@ -51,166 +51,166 @@ function App() {
         const data = resultData[defaultSelection]
         dataSelection(data)
       }
-     
-      function dataSelection(data){
-        const primaryData = data.primaryData
-        const articleData = data.articles
-
-          // Store data in variables
-        const viewsData = primaryData.views;
-        const downloadsData = primaryData.downloads;
-        const totalsData = primaryData.totals
-        const topCountriesObject = primaryData.topCountriesByViews;
-        const topCountriesArray = Object.entries(topCountriesObject)
-        setCountriesData(topCountriesArray)
-        if(articleData.topPerformingArticle == null){
-          setTitleData([]);
-        }else{
-          const titles = articleData.topPerformingArticle
-          setTitleData(titles);
-        }
-        const totalViews = primaryData.totalViews;
-        const totalDownloads = primaryData.totalDownloads;
-        const dates = primaryData.xlabels
-        const labels = dates.splice(6,11)
-
-        function mapToFormattedArray(arr) {
-          return arr.map(dateString => {
-            const [year, month] = dateString.split('-');
-            const monthIndex = parseInt(month, 10) - 1;
-            const dateObj = new Date(year, monthIndex);
-            // Format the date as 'Mon YYYY'
-            const formattedDate = new Intl.DateTimeFormat('en-US', {
-              year: 'numeric',
-              month: 'short'
-            }).format(dateObj);
-            return formattedDate;
-          });
-        }
-
-        const formattedLabels = mapToFormattedArray(labels)
-
-        const table3 = `<table>
-                            <tr>
-                                <th>Parameter</th>
-                                <th>Value</th>
-                            </tr>
-                            <tr>
-                                <td>Total Number of Views</td>
-                                <td>${totalViews}</td>
-                            </tr>
-                            <tr>
-                                <td>Total Number of Downloads</td>
-                                <td>${totalDownloads}</td>
-                            </tr>
-                        </table>`;
-
-        document.getElementById('totals').innerHTML = table3;
-
-        // Create new Chart instance
-        var viewsTrace = {
-          x: formattedLabels,
-          y: viewsData,
-          name: 'views',
-          text: viewsData.map(String),
-          type: 'bar',
-          hovertemplate: '<b><i>Views</i>: %{y}<extra></extra></b>',
-          textposition: 'auto',
-          marker: {
-            color: 'rgb(174, 182, 191)',
-          }
-        };
-        
-        var downloadsTrace = {
-          x: formattedLabels,
-          y: downloadsData,
-          name: 'downloads',
-          text: downloadsData.map(String),
-          type: 'bar',
-          hovertemplate: '<b><i>Downloads</i>: %{y}<extra></extra></b>',
-          textposition: 'auto',
-          hoverinfo: 'none',
-          marker: {
-            color: '#ADD8E6',
-          }
-        };
-
-        var totalTrace = {
-          x: formattedLabels,
-          y: totalsData,
-          name: 'Total',
-          text: totalsData.map(String),
-          type: 'bar',
-          hovertemplate: '<b><i>Total</i>: %{y}<extra></extra></b>',
-          textposition: 'auto',
-          hoverinfo: 'none',
-          marker: {
-            color: 'rgb(46, 64, 83)',
-          }
-        };
-        
-        var data = [viewsTrace, downloadsTrace, totalTrace];
-
-        let width, height;
-        if (window.innerWidth < 481) {
-          width = Math.min(window.innerWidth * 0.85, 400);
-          height = Math.min(window.innerHeight * 0.3, 250);
-          var layout = {
-            barmode: 'group', 
-            paper_bgcolor:'rgba(0,0,0,0)',
-            plot_bgcolor:'rgba(0,0,0,0)',
-            width: width,
-            height: height,
-            margin: {l: 30, r: 0, t: 0, b: 50},
-            legend: { orientation: 'h', x:0.075, y: -0.1, traceorder: 'normal' },
-            xaxis: {
-              tickfont: { size: 8, bold: true }
-            },
-            yaxis: {
-              tickfont: { size: 8, bold: true }
-            },
-            dragmode: false,
-            selectdirection: 'h'
-          };
-        } else if (window.innerWidth < 867 && window.innerWidth >= 481) {
-          width = Math.min(window.innerWidth * 0.9, 850);
-          height = Math.min(window.innerHeight * 0.5, 450);
-          var layout = {
-            barmode: 'group', 
-            paper_bgcolor:'rgba(0,0,0,0)',
-            plot_bgcolor:'rgba(0,0,0,0)',
-            width: width,
-            height: height,
-            margin: {l: 30, r: 0, t: 0, b: 50},
-            legend: { orientation: 'h', x: 0.55, y: 1.1, traceorder: 'normal', font: { size: 15 } },
-            xaxis: {
-              tickfont: { size: 12, bold: true }
-            },
-            yaxis: {
-              tickfont: { size: 12, bold: true }
-            },
-            dragmode: false,
-            selectdirection: 'h'
-          };
-        }else {
-          width = Math.min(window.innerWidth * 0.9, 1275);
-          height = Math.min(window.innerHeight * 0.6, 700);
-          var layout = {
-            barmode: 'group', 
-            paper_bgcolor:'rgba(0,0,0,0)',
-            plot_bgcolor:'rgba(0,0,0,0)',
-            autosize: false,
-            width: width,
-            height: height,
-            legend: { orientation: 'h', x: 0.72, y: 1.1, traceorder: 'normal', font: { size: 15 } },
-            dragmode: false,
-            selectdirection: 'h'
-          };
-        }     
-        Plotly.newPlot('chart', data, layout, {displayModeBar: false});
-        }
     }
   }, [resultData, selectedDepartment, selectedFaculty]);
+
+  function dataSelection(data){
+    
+    const primaryData = data.primaryData
+    const articleData = data.articles
+
+    const viewsData = primaryData.views;
+    const downloadsData = primaryData.downloads;
+    const totalsData = primaryData.totals;
+    const topCountriesObject = primaryData.topCountriesByViews;
+    const topCountriesArray = Object.entries(topCountriesObject)
+    setCountriesData(topCountriesArray)
+    if(articleData.topPerformingArticle == null){
+      setTitleData([]);
+    }else{
+      const titles = articleData.topPerformingArticle
+      setTitleData(titles);
+    }
+    const totalViews = primaryData.totalViews;
+    const totalDownloads = primaryData.totalDownloads;
+    const dates = primaryData.xlabels
+    const labels = dates.splice(6,11)
+
+    function mapToFormattedArray(arr) {
+      return arr.map(dateString => {
+        const [year, month] = dateString.split('-');
+        const monthIndex = parseInt(month, 10) - 1;
+        const dateObj = new Date(year, monthIndex);
+        // Format the date as 'Mon YYYY'
+        const formattedDate = new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: 'short'
+        }).format(dateObj);
+        return formattedDate;
+      });
+    }
+
+    const formattedLabels = mapToFormattedArray(labels)
+
+    const table3 = `<table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Total Number of Views</td>
+                            <td>${totalViews}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Number of Downloads</td>
+                            <td>${totalDownloads}</td>
+                        </tr>
+                    </table>`;
+
+    document.getElementById('totals').innerHTML = table3;
+
+    // Create new Chart instance
+    var viewsTrace = {
+      x: formattedLabels,
+      y: viewsData,
+      name: 'views',
+      text: viewsData.map(String),
+      type: 'bar',
+      hovertemplate: '<b><i>Views</i>: %{y}<extra></extra></b>',
+      textposition: 'auto',
+      marker: {
+        color: 'rgb(174, 182, 191)',
+      }
+    };
+    
+    var downloadsTrace = {
+      x: formattedLabels,
+      y: downloadsData,
+      name: 'downloads',
+      text: downloadsData.map(String),
+      type: 'bar',
+      hovertemplate: '<b><i>Downloads</i>: %{y}<extra></extra></b>',
+      textposition: 'auto',
+      hoverinfo: 'none',
+      marker: {
+        color: '#ADD8E6',
+      }
+    };
+
+    var totalTrace = {
+      x: formattedLabels,
+      y: totalsData,
+      name: 'Total',
+      text: totalsData.map(String),
+      type: 'bar',
+      hovertemplate: '<b><i>Total</i>: %{y}<extra></extra></b>',
+      textposition: 'auto',
+      hoverinfo: 'none',
+      marker: {
+        color: 'rgb(46, 64, 83)',
+      }
+    };
+    
+    var data = [viewsTrace, downloadsTrace, totalTrace];
+
+    let width, height;
+    if (window.innerWidth < 481) {
+      width = Math.min(window.innerWidth * 0.85, 400);
+      height = Math.min(window.innerHeight * 0.3, 250);
+      var layout = {
+        barmode: 'group', 
+        paper_bgcolor:'rgba(0,0,0,0)',
+        plot_bgcolor:'rgba(0,0,0,0)',
+        width: width,
+        height: height,
+        margin: {l: 30, r: 0, t: 0, b: 50},
+        legend: { orientation: 'h', x:0.075, y: -0.1, traceorder: 'normal' },
+        xaxis: {
+          tickfont: { size: 8, bold: true }
+        },
+        yaxis: {
+          tickfont: { size: 8, bold: true }
+        },
+        dragmode: false,
+        selectdirection: 'h'
+      };
+    } else if (window.innerWidth < 867 && window.innerWidth >= 481) {
+      width = Math.min(window.innerWidth * 0.9, 850);
+      height = Math.min(window.innerHeight * 0.5, 450);
+      var layout = {
+        barmode: 'group', 
+        paper_bgcolor:'rgba(0,0,0,0)',
+        plot_bgcolor:'rgba(0,0,0,0)',
+        width: width,
+        height: height,
+        margin: {l: 30, r: 0, t: 0, b: 50},
+        legend: { orientation: 'h', x: 0.55, y: 1.1, traceorder: 'normal', font: { size: 15 } },
+        xaxis: {
+          tickfont: { size: 12, bold: true }
+        },
+        yaxis: {
+          tickfont: { size: 12, bold: true }
+        },
+        dragmode: false,
+        selectdirection: 'h'
+      };
+    }else {
+      width = Math.min(window.innerWidth * 0.9, 1275);
+      height = Math.min(window.innerHeight * 0.6, 700);
+      var layout = {
+        barmode: 'group', 
+        paper_bgcolor:'rgba(0,0,0,0)',
+        plot_bgcolor:'rgba(0,0,0,0)',
+        autosize: false,
+        width: width,
+        height: height,
+        legend: { orientation: 'h', x: 0.72, y: 1.1, traceorder: 'normal', font: { size: 15 } },
+        dragmode: false,
+        selectdirection: 'h'
+      };
+    }     
+    Plotly.newPlot('chart', data, layout, {displayModeBar: false});
+    }
 
   useEffect(() => {
     const loadGoogleCharts = async () => {
@@ -270,10 +270,12 @@ function App() {
     setSelectedFaculty(e.target.value);
     setSelectedDepartment('');
     setDefaultSelection('Toronto Metropolitan University')
+    setResultData(null)
   };
 
   const handleDepartmentChange = (e) => {
-    setSelectedDepartment(e.target.value);
+    setSelectedDepartment(e.target.value)
+    setResultData(null)
   };
 
   return (

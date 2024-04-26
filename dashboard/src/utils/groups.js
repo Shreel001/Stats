@@ -1,5 +1,5 @@
-require('dotenv').config();
-const { BEARER_AUTHORIZATION_TOKEN } = require('./env');
+const cron = require('node-cron');
+const { CONTENT_URL, BEARER_AUTHORIZATION_TOKEN } = require('./env');
 
 /* Authorization header */
 const headers = {
@@ -7,24 +7,17 @@ const headers = {
     'Content-Type': 'application/json',
 };
 
-let cachedData = null;
-let lastCacheTimestamp = 0;
-const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000;
+let cachedGroupIDs;
 
-const getGroupIDs = async () => {
+const fetchGroupIDs = async () => {
     try {
-
-        if (cachedData && Date.now() - lastCacheTimestamp < CACHE_DURATION) {
-            return cachedData;
-        }
-
-        const response = await fetch(`https://api.figshare.com/v2/account/institution/groups`, { headers });
+        const response = await fetch(`${CONTENT_URL}/account/institution/groups`, { headers });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const json_response = await response.json();
 
-        const result = json_response.map(article => ({ name: article.name, id: article.id }))
+        const result = json_response.map(article => ({ name: article.name, id: article.id }));
 
         const faculty = json_response
             .filter(article => article.parent_id == 35349)
@@ -47,17 +40,34 @@ const getGroupIDs = async () => {
             .filter(article => article.parent_id == 0 && article.id == 35349)
             .map(article => ({ name: article.name }));
 
-        const data = {result,departments,university}
-
-        // Cache the fetched data
-        cachedData = data;
-        lastCacheTimestamp = Date.now();
-
-        return data;
+        return { result, departments, university };
     } catch (error) {
         console.error('Error fetching group IDs:', error);
-        return null;
+        throw error; // Rethrow the error to handle it outside
     }
 };
+
+cron.schedule('0 0 * * 0', async () => {
+    try {
+        // Fetch group IDs and update cachedGroupIDs
+        const newData = await fetchGroupIDs();
+        cachedGroupIDs = newData;
+        console.log('Data refreshed:', newData);
+        return cachedGroupIDs;
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+    }
+})
+
+const getGroupIDs = async () => {
+
+    if(!cachedGroupIDs){
+        const data = await fetchGroupIDs()
+        cachedGroupIDs = data;
+        return cachedGroupIDs;
+    }else{
+        return cachedGroupIDs
+    }
+}
 
 module.exports = getGroupIDs;
