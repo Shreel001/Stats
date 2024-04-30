@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const deptwise = require('./utils/deptWiseData');
+const missingArticles = require('./utils/practice');
 
 const app = express();
 app.use(express.static('public'));
@@ -10,7 +10,7 @@ app.use(cors());
 let serverCache = null;
 let isRefreshing = false; // Flag to indicate if cache is being refreshed
 let temporaryCache = null; // Temporary cache to serve data while refreshing
-const PORT = 8000;
+const PORT = 5000;
 
 /* Refresh cache every 8 hour */
 cron.schedule('* */8 * * *', async () => {
@@ -21,7 +21,7 @@ cron.schedule('* */8 * * *', async () => {
         isRefreshing = true;
 
         // Fetch new data
-        const newData = await deptwise();
+        const newData = await missingArticles();
 
         // Update the temporary cache with new data
         temporaryCache = { data: newData };
@@ -43,7 +43,7 @@ cron.schedule('* */8 * * *', async () => {
 /* Proxy to handle requests */
 app.use('/', async (req, res) => {
     if (!serverCache && !temporaryCache) {
-        const data = await deptwise();
+        const data = await missingArticles();
         
         serverCache = { data: data };
     }

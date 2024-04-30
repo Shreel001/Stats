@@ -15,12 +15,16 @@ const deptwise = async () => {
 
     const resolvedData = await Promise.all(promises);
 
+    const nullArticleData = resolvedData.filter(({data}) => data.articles == null)
+    const nullArticleDepts = nullArticleData.map(element => ({id: element.id, department: element.name}))
+    const nullArticleDeptsLength = nullArticleDepts.length
+
     const nullData = resolvedData.filter(({data}) => data.primaryData == null)
     const nullDataDepts = nullData.map(element => element.name)
     const nullDepts = nullDataDepts.length
 
-    const filteredData = resolvedData.reduce((acc, item) => {
-        if (item.data.primaryData !== null) {
+    const primaryData = resolvedData.reduce((acc, item) => {
+        if (item.data.primaryData !== null && item.data.articles !== null) {
             acc[item.name] = {
                 id: item.id,
                 primaryData: item.data.primaryData,
@@ -28,7 +32,7 @@ const deptwise = async () => {
             };
         }
         return acc;
-    }, {});    
+    }, {});
 
     // Remove sub-departments present in nullData from each faculty
     const filteredDepartments = await response.departments.map(dept => {
@@ -48,7 +52,7 @@ const deptwise = async () => {
 
     const university = response.university
 
-    return {university, deptList, filteredData, nullDepts, nullDataDepts, nullDepts};
+    return { university, deptList, primaryData, nullArticleDepts, nullArticleDeptsLength};
 }
 
 module.exports = deptwise;
