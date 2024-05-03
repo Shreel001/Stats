@@ -17,21 +17,12 @@ const fetchArticles = async (GROUP_ID) => {
         let responseTitles_json;
 
         // Attempt fetching with a maximum of 3 retries
-        for (let i = 0; i < 3; i++) {
-            try {
-                const response_Titles_6 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`);
-                responseTitles_json = await response_Titles_6.json();
+        const response_Titles_6 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`);
+        responseTitles_json = await response_Titles_6.json();
 
-                if (responseTitles_json.length < 10) {
-                    const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`);
-                    responseTitles_json = await response_Titles_12.json();
-                }
-
-                break; // If successful, break out of the retry loop
-            } catch (error) {
-                console.error(`Error fetching articles (Attempt ${i + 1}):`, error);
-                if (i === 2) throw error; // Throw error after maximum retries
-            }
+        if (responseTitles_json.length < 10) {
+            const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`);
+            responseTitles_json = await response_Titles_12.json();
         }
     
         /* Filtering Articles dataset to get top 10 performing articles with most views */

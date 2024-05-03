@@ -20,7 +20,7 @@ function App() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://52.15.84.93:8000');
+      const response = await fetch('http://localhost:8000');
       const data = await response.json();
       const filteredData = await data.mergedDataset
       const departments = await data.deptList

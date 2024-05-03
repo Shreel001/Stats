@@ -10,7 +10,7 @@ app.use(cors());
 let serverCache = null;
 let isRefreshing = false; // Flag to indicate if cache is being refreshed
 let temporaryCache = null; // Temporary cache to serve data while refreshing
-const PORT = 5000;
+const PORT = 8000;
 
 /* Refresh cache every 8 hour */
 cron.schedule('* */8 * * *', async () => {

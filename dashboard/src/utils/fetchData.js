@@ -1,5 +1,5 @@
 const getDate = require('./getDate')
-const { STATS_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
+const { STATS_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER } = require('./env');
 
 /* Fetching array of last 6 months from current date */
 var xlabels = getDate();
