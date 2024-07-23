@@ -47,7 +47,7 @@ const fetchGroupIDs = async () => {
     }
 };
 
-cron.schedule('0 0 * * 0', async () => {
+cron.schedule('0 0 * * 1', async () => {
     try {
         // Fetch group IDs and update cachedGroupIDs
         const newData = await fetchGroupIDs();
@@ -57,7 +57,7 @@ cron.schedule('0 0 * * 0', async () => {
     } catch (error) {
         console.error('Error refreshing data:', error);
     }
-})
+});
 
 const getGroupIDs = async () => {
 
