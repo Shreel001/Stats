@@ -47,7 +47,7 @@ const fetchGroupIDs = async () => {
     }
 };
 
-cron.schedule('0 0 * * 1', async () => {
+cron.schedule('0 0 1 * *', async () => {
     try {
         // Fetch group IDs and update cachedGroupIDs
         const newData = await fetchGroupIDs();
