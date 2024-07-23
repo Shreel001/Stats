@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const missingArticles = require('./utils/practice');
+const missingArticles = require('./utils/missingArticles');
 
 const app = express();
 app.use(express.static('public'));
