@@ -1,55 +1,76 @@
-const getDate = require('./getDate')
-const { STATS_URL, CONTENT_URL, INSTITUTION_NAME , BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
+const getDate = require('./getDate');
+const { STATS_URL, CONTENT_URL, INSTITUTION_NAME, BASIC_AUTHORIZATION_HEADER, BEARER_AUTHORIZATION_TOKEN } = require('./env');
 
-/* Fetching array of last 6 months from current date */
-var xlabels = getDate();
+const xlabels = getDate();
 
-/* Authorization header */
 const headers = {
     'Authorization': `Basic ${BASIC_AUTHORIZATION_HEADER}`,
     'Content-Type': 'application/json',
 };
 
-/* Function to fetch and cache data */
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const logTimestamp = (message) => {
+    console.log(`${new Date().toISOString()}: ${message}`);
+};
+
 const fetchArticles = async (GROUP_ID) => {
-
     try {
-        let responseTitles_json;
+        const fetchArticlesData = async (url) => {
+            logTimestamp(`Requesting URL: ${url}`);
+            const startTime = Date.now();
+            const response = await fetch(url);
+            const data = await response.json();
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < 1000) {
+                await delay(1000 - elapsedTime);
+            }
+            return data;
+        };
 
-        // Attempt fetching with a maximum of 3 retries
-        const response_Titles_6 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`);
-        responseTitles_json = await response_Titles_6.json();
+        const urls = [
+            `${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[6]}-01&group=${GROUP_ID}`,
+            `${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`
+        ];
 
-        if (responseTitles_json.length < 10) {
-            const response_Titles_12 = await fetch(`${CONTENT_URL}/articles?page=1&page_size=1000&published_since=${xlabels[0]}-01&group=${GROUP_ID}`);
-            responseTitles_json = await response_Titles_12.json();
+        let responseTitles_json = await fetchArticlesData(urls[0]);
+
+        if (responseTitles_json.length < 5) {
+            responseTitles_json = await fetchArticlesData(urls[1]);
         }
-    
-        /* Filtering Articles dataset to get top 10 performing articles with most views */
-        const viewsByArticleID = responseTitles_json.map(async (element) => {
+
+        const fetchViewsData = async (element) => {
             const { id, title, url_public_html } = element;
-    
-            const response = await fetch(`${STATS_URL}/${INSTITUTION_NAME}/total/article/${id}`);
-            
+            const url = `${STATS_URL}/${INSTITUTION_NAME}/total/article/${id}`;
+            logTimestamp(`Requesting URL: ${url}`);
+            const startTime = Date.now();
+            const response = await fetch(url);
             if (!response.ok) {
                 console.error(`Failed to fetch data for ID ${id}: ${response.statusText}`);
-                return { title, views: 0 };
+                return { id, title, hyperlink: url_public_html, totalData: 0 };
             }
-    
             const responseData = await response.json();
-            const totalViews = responseData.views;
-            const totalDownloads = responseData.downloads;
-            const totalData = totalViews + totalDownloads;
-    
-            return { id: id, title, hyperlink: url_public_html, totalData: totalData };
-        });
-    
-        const results = await Promise.all(viewsByArticleID);
-        results.sort((a, b) => b.totalData - a.totalData);
-        const topTenArticles = results.slice(0, 10);
-    
-        const topPerformingArticle = await Promise.all(topTenArticles.map(async (item) => {
-            const response = await fetch(`${CONTENT_URL}/account/articles/${item.id}/authors`, {
+            const totalData = responseData.views + responseData.downloads;
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < 1000) {
+                await delay(1000 - elapsedTime);
+            }
+            return { id, title, hyperlink: url_public_html, totalData };
+        };
+
+        const viewsByArticleID = [];
+        for (const element of responseTitles_json) {
+            viewsByArticleID.push(await fetchViewsData(element));
+        }
+
+        viewsByArticleID.sort((a, b) => b.totalData - a.totalData);
+        const topTenArticles = viewsByArticleID.slice(0, 5);
+
+        const fetchAuthorsData = async (item) => {
+            const url = `${CONTENT_URL}/account/articles/${item.id}/authors`;
+            logTimestamp(`Requesting URL: ${url}`);
+            const startTime = Date.now();
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${BEARER_AUTHORIZATION_TOKEN}`,
                     'Content-Type': 'application/json'
@@ -57,7 +78,10 @@ const fetchArticles = async (GROUP_ID) => {
             });
             const authors = await response.json();
             const authorNames = authors.map(author => author.full_name);
-            
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < 1000) {
+                await delay(1000 - elapsedTime);
+            }
             return {
                 title: item.title,
                 views: item.totalData,
@@ -65,14 +89,18 @@ const fetchArticles = async (GROUP_ID) => {
                 id: item.id,
                 author: authorNames
             };
-        }));
+        };
 
-        var data = { topPerformingArticle };
-    
-        return data;
+        const topPerformingArticle = [];
+        for (const item of topTenArticles) {
+            topPerformingArticle.push(await fetchAuthorsData(item));
+        }
+
+        return { topPerformingArticle };
     } catch (error) {
+        console.error("Error fetching articles:", error);
         return null;
     }
-}
+};
 
 module.exports = fetchArticles;

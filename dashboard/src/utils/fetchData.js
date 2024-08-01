@@ -1,90 +1,79 @@
-const getDate = require('./getDate')
-const { STATS_URL, INSTITUTION_NAME ,BASIC_AUTHORIZATION_HEADER } = require('./env');
+const getDate = require('./getDate');
+const { STATS_URL, INSTITUTION_NAME, BASIC_AUTHORIZATION_HEADER } = require('./env');
 
-/* Fetching array of last 6 months from current date */
-var xlabels = getDate();
+const xlabels = getDate();
 
-/* Authorization header */
 const headers = {
     'Authorization': `Basic ${BASIC_AUTHORIZATION_HEADER}`,
     'Content-Type': 'application/json',
 };
 
-/* Function to fetch and cache data */
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const logTimestamp = (message) => {
+    console.log(`${new Date().toISOString()}: ${message}`);
+};
+
 const fetchData = async (GROUP_ID) => {
-
     try {
-        const [
-            response_Views,
-            response_Downloads,
-            response_TopCountries,
-            respose_total_Views,
-            response_total_Downloads
-        ] = await Promise.all([
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/month/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/month/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/breakdown/total/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/year/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers }),
-            fetch(`${STATS_URL}/${INSTITUTION_NAME}/timeline/year/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`, { headers })
-        ]); 
+        const fetchWithDelay = async (url) => {
+            logTimestamp(`Requesting URL: ${url}`);
+            const startTime = Date.now();
+            const response = await fetch(url, { headers });
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < 1000) {
+                await delay(1000 - elapsedTime);
+            }
+            return response.json();
+        };
 
-        const views_json = await response_Views.json();
-        const downloads_json = await response_Downloads.json();
-        const topCountries_json = await response_TopCountries.json();
-        const totalViews_json = await respose_total_Views.json();
-        const totalDownloads_json = await response_total_Downloads.json();
-    
-        /* views: Array of views data for past 6 months to display on chart */
-        /* downloads: Array of downloads data for past 6 months to display on chart */
+        const urls = [
+            `${STATS_URL}/${INSTITUTION_NAME}/timeline/month/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`,
+            `${STATS_URL}/${INSTITUTION_NAME}/timeline/month/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`,
+            `${STATS_URL}/${INSTITUTION_NAME}/breakdown/total/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`,
+            `${STATS_URL}/${INSTITUTION_NAME}/timeline/year/views/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`,
+            `${STATS_URL}/${INSTITUTION_NAME}/timeline/year/downloads/group/${GROUP_ID}?start_date=${xlabels[6]}-01&end_date=${xlabels[11]}-28`
+        ];
+
+        // Fetch data sequentially with delay
+        const responses = [];
+        for (const url of urls) {
+            responses.push(await fetchWithDelay(url));
+        }
+
+        const [views_json, downloads_json, topCountries_json, totalViews_json, totalDownloads_json] = responses;
+
         const views = Object.values(views_json.timeline);
         const downloads = Object.values(downloads_json.timeline);
 
-        const tempViews = [...views]; // Create a copy of views array
-        const tempDownloads = [...downloads]; // Create a copy of downloads array
-        
-        const maxLength = Math.max(tempViews.length, tempDownloads.length);
-        
-        // Pad views array with zeros if it's shorter
-        while (tempViews.length < maxLength) {
-            tempViews.push(0);
-        }
-        
-        // Pad downloads array with zeros if it's shorter
-        while (tempDownloads.length < maxLength) {
-            tempDownloads.push(0);
-        }
-        
-        let totals = [];
-        for(i=0; i < maxLength; i++){
-            totals[i] = tempViews[i] + tempDownloads[i]
-        }
-    
-        /* Total views and downloads data over past 6 months */
-        const resultViews = await totalViews_json.timeline
-        const resultDownloads = await totalDownloads_json.timeline
-        const totalDownloads = Object.values(resultDownloads).reduce((acc, value) => acc + value, 0);
-        const totalViews = Object.values(resultViews).reduce((acc, value) => acc + value, 0);
-    
-        /* Top ten countries by number of views */
-        const result = topCountries_json.breakdown.total
-        const countriesData = Object.entries(result)
-        const allCountriesViews = countriesData.reduce((arr, [country, countryData]) =>{
-            arr[country] = countryData.total;
-            return arr
-        },[])
-    
-        /* Filtering country dataset to get top 10 countries with most views */
-        const countryNames = Object.entries(allCountriesViews);
-        const filteredByViews = countryNames.filter(([key, value]) => key !== 'Unknown'); // Filtering out the Unknown dataset
-        const topTen = filteredByViews.slice(0, 25);
-        const topCountriesByViews = Object.fromEntries(topTen); // Top ten countries by number of views
+        const maxLength = Math.max(views.length, downloads.length);
+        const paddedViews = [...views, ...Array(maxLength - views.length).fill(0)];
+        const paddedDownloads = [...downloads, ...Array(maxLength - downloads.length).fill(0)];
 
-        var data = { views, downloads, totals, xlabels, topCountriesByViews, totalViews, totalDownloads };
-    
+        const totals = paddedViews.map((view, index) => view + paddedDownloads[index]);
+
+        const totalViews = Object.values(totalViews_json.timeline).reduce((acc, value) => acc + value, 0);
+        const totalDownloads = Object.values(totalDownloads_json.timeline).reduce((acc, value) => acc + value, 0);
+
+        const allCountriesViews = Object.entries(topCountries_json.breakdown.total)
+            .reduce((acc, [country, data]) => {
+                if (country !== 'Unknown') {
+                    acc[country] = data.total;
+                }
+                return acc;
+            }, {});
+
+        const topCountriesByViews = Object.fromEntries(
+            Object.entries(allCountriesViews).slice(0, 25)
+        );
+
+        const data = { views, downloads, totals, xlabels, topCountriesByViews, totalViews, totalDownloads };
+
         return data;
     } catch (error) {
+        console.error("Error fetching data:", error);
         return null;
     }
-}
+};
 
 module.exports = fetchData;

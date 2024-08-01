@@ -1,29 +1,40 @@
 const fetchData = require('./fetchData');
 const getGroupIDs = require('./groups');
-const fetchArticle = require('./fetchArticles')
+const fetchArticle = require('./fetchArticles');
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const deptwise = async () => {
     const response = await getGroupIDs();
     const Ids = await response.result.map(element => ({ id: element.id, department: element.name }));
 
-    const promises = Ids.map(async element => {
+    const results = [];
+    
+    for (const element of Ids) {
+
+        // Fetch primary data
         const primaryData = await fetchData(element.id);
-        const articles = await fetchArticle(element.id)
-        const data = {primaryData, articles}
-        return {name: element.department, id: element.id, data };
-    });
 
-    const resolvedData = await Promise.all(promises);
+        // Introduce delay
+        await delay(1000);
 
-    const nullArticleData = resolvedData.filter(({data}) => data.articles == null)
+        // Fetch articles
+        const articles = await fetchArticle(element.id);
+
+        // Combine data
+        const data = { primaryData, articles };
+        results.push({ name: element.department, id: element.id, data });
+    }
+
+    const nullArticleData = results.filter(({data}) => data.articles == null)
     const nullArticleDepts = nullArticleData.map(element => ({id: element.id, department: element.name}))
     const nullArticleDeptsLength = nullArticleDepts.length
 
-    const nullData = resolvedData.filter(({data}) => data.primaryData == null)
+    const nullData = results.filter(({data}) => data.primaryData == null)
     const nullDataDepts = nullData.map(element => element.name)
     const nullDepts = nullDataDepts.length
 
-    const primaryData = resolvedData.reduce((acc, item) => {
+    const primaryData = results.reduce((acc, item) => {
         if (item.data.primaryData !== null && item.data.articles !== null) {
             acc[item.name] = {
                 id: item.id,
