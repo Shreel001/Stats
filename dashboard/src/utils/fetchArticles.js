@@ -35,7 +35,7 @@ const fetchArticles = async (GROUP_ID) => {
 
         let responseTitles_json = await fetchArticlesData(urls[0]);
 
-        if (responseTitles_json.length < 5) {
+        if (responseTitles_json.length < 10) {
             responseTitles_json = await fetchArticlesData(urls[1]);
         }
 
@@ -64,7 +64,7 @@ const fetchArticles = async (GROUP_ID) => {
         }
 
         viewsByArticleID.sort((a, b) => b.totalData - a.totalData);
-        const topTenArticles = viewsByArticleID.slice(0, 5);
+        const topTenArticles = viewsByArticleID.slice(0, 10);
 
         const fetchAuthorsData = async (item) => {
             const url = `${CONTENT_URL}/account/articles/${item.id}/authors`;

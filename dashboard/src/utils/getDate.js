@@ -23,6 +23,4 @@ function getDate() {
     return xlabels;
 }
 
-console.log(getDate())
-
 module.exports = getDate;
